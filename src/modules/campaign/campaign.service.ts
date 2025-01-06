@@ -1,26 +1,105 @@
 import { Injectable } from '@nestjs/common';
-import { CreateCampaignDto } from './dto/create-campaign.dto';
-import { UpdateCampaignDto } from './dto/update-campaign.dto';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from 'src/database/prisma.service';
 
 @Injectable()
 export class CampaignService {
-  create(createCampaignDto: CreateCampaignDto) {
-    return 'This action adds a new campaign';
+  constructor(private readonly repository: PrismaService) {}
+
+  async create(createCampaignDto: Prisma.campaignCreateInput) {
+    try {
+      const campaign = await this.repository.campaign.create({
+        data: { ...createCampaignDto },
+      });
+
+      return { data: campaign, error: null };
+    } catch (error) {
+      console.error(error);
+      return { data: null, error: error.message };
+    }
   }
 
-  findAll() {
-    return `This action returns all campaign`;
+  async list(input: { page?: number; items_per_page?: number }) {
+    const { page, items_per_page } = input;
+
+    const query: Prisma.campaignFindManyArgs = {
+      take: 5,
+    };
+
+    if (items_per_page) {
+      query.take = items_per_page;
+    }
+
+    if (page) {
+      query.skip = (page - 1) * query.take;
+    }
+
+    try {
+      const campaigns = await this.repository.campaign.findMany(query);
+      const total_items = await this.repository.campaign.count();
+
+      return {
+        data: campaigns,
+        pagination: {
+          total_items,
+          page: page ?? 1,
+          items_per_page: query.take,
+          total_pages: Math.ceil(total_items / query.take),
+        },
+        error: null,
+      };
+    } catch (error) {
+      console.error(error);
+      return {
+        data: null,
+        pagination: null,
+        error: error.message,
+      };
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} campaign`;
+  async findOne(id: string) {
+    try {
+      const campaign = await this.repository.campaign.findUnique({
+        where: { id },
+      });
+
+      return { data: campaign, error: null };
+    } catch (error) {
+      console.error(error);
+      return { data: null, error: error.message };
+    }
   }
 
-  update(id: number, updateCampaignDto: UpdateCampaignDto) {
-    return `This action updates a #${id} campaign`;
+  async update(input: {
+    campaign_id: string;
+    updateCampaignDto: Prisma.campaignUpdateInput;
+  }) {
+    const { campaign_id, updateCampaignDto } = input;
+
+    try {
+      const campaign = await this.repository.campaign.update({
+        where: { id: campaign_id },
+        data: { ...updateCampaignDto },
+      });
+
+      return { data: campaign, error: null };
+    } catch (error) {
+      console.error(error);
+      return { data: null, error: error.message };
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} campaign`;
+  async remove(id: string) {
+    try {
+      const campaign = await this.repository.campaign.delete({
+        where: { id },
+      });
+
+      return { data: campaign, error: null };
+    } catch (error) {
+      console.error(error);
+      return { data: null, error: error.message };
+    }
   }
 }

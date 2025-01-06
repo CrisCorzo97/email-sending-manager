@@ -1,45 +1,117 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
 } from '@nestjs/common';
+import { campaign, Prisma } from '@prisma/client';
+import { Envelope } from 'src/types/envelope';
 import { CampaignService } from './campaign.service';
-import { CreateCampaignDto } from './dto/create-campaign.dto';
-import { UpdateCampaignDto } from './dto/update-campaign.dto';
 
 @Controller('campaign')
 export class CampaignController {
   constructor(private readonly campaignService: CampaignService) {}
 
   @Post()
-  create(@Body() createCampaignDto: CreateCampaignDto) {
-    return this.campaignService.create(createCampaignDto);
+  async create(@Body() createCampaignDto: Prisma.campaignCreateInput) {
+    const response: Envelope<campaign> = {
+      success: true,
+      data: null,
+      error: null,
+      pagination: null,
+    };
+
+    const { data, error } =
+      await this.campaignService.create(createCampaignDto);
+
+    response.data = data;
+    response.error = error;
+
+    return response;
   }
 
   @Get()
-  findAll() {
-    return this.campaignService.findAll();
+  async list(
+    @Query('page') page?: number,
+    @Query('items_per_page') items_per_page?: number,
+  ) {
+    const response: Envelope<campaign[]> = {
+      success: true,
+      data: null,
+      error: null,
+      pagination: null,
+    };
+
+    const { data, pagination, error } = await this.campaignService.list({
+      page,
+      items_per_page,
+    });
+
+    response.data = data;
+    response.pagination = pagination;
+    response.error = error;
+
+    return response;
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.campaignService.findOne(+id);
+  async findOne(@Param('campaign_id') campaign_id: string) {
+    const response: Envelope<campaign> = {
+      success: true,
+      data: null,
+      error: null,
+      pagination: null,
+    };
+
+    const { data, error } = await this.campaignService.findOne(campaign_id);
+
+    response.data = data;
+    response.error = error;
+
+    return response;
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateCampaignDto: UpdateCampaignDto,
+  async update(
+    @Param('campaign_id') campaign_id: string,
+    @Body() updateCampaignDto: Prisma.campaignUpdateInput,
   ) {
-    return this.campaignService.update(+id, updateCampaignDto);
+    const response: Envelope<campaign> = {
+      success: true,
+      data: null,
+      error: null,
+      pagination: null,
+    };
+
+    const { data, error } = await this.campaignService.update({
+      campaign_id,
+      updateCampaignDto,
+    });
+
+    response.data = data;
+    response.error = error;
+
+    return response;
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.campaignService.remove(+id);
+  async remove(@Param('campaign_id') campaign_id: string) {
+    const response: Envelope<campaign> = {
+      success: true,
+      data: null,
+      error: null,
+      pagination: null,
+    };
+
+    const { data, error } = await this.campaignService.remove(campaign_id);
+
+    response.data = data;
+    response.error = error;
+
+    return response;
   }
 }
