@@ -1,12 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
+import { CreateCampaignDto } from './dto/campaign-dto';
 
 @Injectable()
 export class CampaignService {
   constructor(private readonly repository: PrismaService) {}
 
-  async create(createCampaignDto: Prisma.campaignCreateInput) {
+  async create(createCampaignDto: CreateCampaignDto) {
+    for (const key in createCampaignDto) {
+      if (!createCampaignDto[key]) {
+        return {
+          data: null,
+          error: `Field ${key} is required`,
+        };
+      }
+    }
+
     try {
       const campaign = await this.repository.campaign.create({
         data: { ...createCampaignDto },

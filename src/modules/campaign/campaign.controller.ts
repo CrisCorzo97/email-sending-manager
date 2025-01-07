@@ -11,13 +11,14 @@ import {
 import { campaign, Prisma } from '@prisma/client';
 import { Envelope } from 'src/types/envelope';
 import { CampaignService } from './campaign.service';
+import { CreateCampaignDto } from './dto/campaign-dto';
 
 @Controller('campaign')
 export class CampaignController {
   constructor(private readonly campaignService: CampaignService) {}
 
   @Post()
-  async create(@Body() createCampaignDto: Prisma.campaignCreateInput) {
+  async create(@Body() createCampaignDto: CreateCampaignDto) {
     const response: Envelope<campaign> = {
       success: true,
       data: null,

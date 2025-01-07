@@ -1,10 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { campaign, Prisma } from '@prisma/client';
+import { campaign } from '@prisma/client';
 import { Envelope } from 'src/types/envelope';
 import { PrismaService } from '../../../database/prisma.service';
 import { CampaignController } from '../campaign.controller';
 import { CampaignService } from '../campaign.service';
-import { prismaCampaignMock } from './prisma-mock';
+import { CreateCampaignDto } from '../dto/campaign-dto';
+import { mockDatabase, prismaCampaignMock } from './prisma-mock';
 
 describe('CampaignController', () => {
   // Defino una variable controller que será del tipo CampaignController
@@ -27,109 +28,70 @@ describe('CampaignController', () => {
 
   describe('POST /campaign (create)', () => {
     it('should create a campaign successfully with valid data', async () => {
-      const campaignData: Prisma.campaignCreateInput = {
+      const campaignData: CreateCampaignDto = {
         name: 'Campaign 1',
         description: 'Description of Campaign 1',
-        template: {
-          connect: {
-            id: 'template1',
-          },
-        },
+        template_id: 'template1',
         send_at: new Date(),
         status: 'DRAFT',
       };
-
-      const mockResult: Envelope<Prisma.campaignCreateInput> = {
-        success: true,
-        data: {
-          id: 'ajsdnafalmd',
-          ...campaignData,
-          created_at: new Date(),
-          updated_at: new Date(),
-        },
-        error: null,
-        pagination: null,
-      };
-
-      prismaCampaignMock.create.mockResolvedValue(mockResult);
 
       // Act
       const result = await controller.create(campaignData);
 
       // Assert
-      expect(result).toEqual(mockResult);
-      expect(prismaCampaignMock.create).toHaveBeenCalledTimes(1);
-      expect(prismaCampaignMock.create).toHaveBeenCalledWith(campaignData);
-      expect(result.success).toEqual(true);
-      expect(result.error).toEqual(null);
-      expect(result.pagination).toEqual(null);
+      expect(result.success).toBe(true);
+      expect(result.data).toMatchObject(campaignData);
+      expect(result.error).toBe(null);
+      expect(result.pagination).toBe(null);
+      expect(mockDatabase.length).toBe(1);
     });
 
     it('should throw an error if the service fails', async () => {
-      const campaignData: Prisma.campaignCreateInput = {
-        name: 'Campaign 1',
+      const campaignData: CreateCampaignDto = {
+        name: 'Server Error',
         description: 'Description of Campaign 1',
-        template: {
-          connect: {
-            id: 'template1',
-          },
-        },
+        template_id: 'template1',
         send_at: new Date(),
         status: 'DRAFT',
       };
-
-      const mockResult: Envelope<Prisma.campaignCreateInput> = {
-        success: false,
-        data: null,
-        error: 'Service Error',
-        pagination: null,
-      };
-
-      prismaCampaignMock.create.mockResolvedValue(mockResult);
 
       // Act
       const result = await controller.create(campaignData);
 
       // Assert
-      expect(result).toEqual(mockResult);
       expect(prismaCampaignMock.create).toHaveBeenCalledWith(campaignData);
-      expect(result.success).toEqual(false);
+      expect(result.success).toBe(false);
       expect(result.error).toEqual('Service Error');
-      expect(result.pagination).toEqual(null);
+      expect(result.pagination).toBe(null);
     });
 
     it('should return a validation error if input is invalid', async () => {
       const invalidData = {
         description: 'Description of Campaign 1',
-        template: {
-          connect: {
-            id: 'template1',
-          },
-        },
+        template_id: 'template1',
         send_at: new Date(),
         status: 'DRAFT',
       };
 
-      const mockResult: Envelope<Prisma.campaignCreateInput> = {
+      const mockResult: Envelope<CreateCampaignDto> = {
         success: false,
         data: null,
         error: 'Field name is required',
         pagination: null,
       };
 
-      prismaCampaignMock.create.mockResolvedValue(mockResult);
+      prismaCampaignMock.create(mockResult);
 
       // Act
-      const result = await controller.create(
-        invalidData as Prisma.campaignCreateInput,
-      );
+      const result = await controller.create(invalidData as CreateCampaignDto);
 
       // Assert
       expect(result).toEqual(mockResult);
       expect(prismaCampaignMock.create).toHaveBeenCalledWith(invalidData);
-      expect(result.success).toEqual(false);
+      expect(result.success).toBe(false);
       expect(result.error).toEqual('Field name is required');
-      expect(result.pagination).toEqual(null);
+      expect(result.pagination).toBe(null);
     });
   });
 
@@ -167,9 +129,9 @@ describe('CampaignController', () => {
       expect(result).toEqual(mockResult);
       expect(prismaCampaignMock.list).toHaveBeenCalledTimes(1);
       expect(prismaCampaignMock.list).toHaveBeenCalledWith({});
-      expect(result.success).toEqual(true);
-      expect(result.error).toEqual(null);
-      expect(result.pagination).toEqual(mockResult.pagination);
+      expect(result.success).toBe(true);
+      expect(result.error).toBe(null);
+      expect(result.pagination).toBe(mockResult.pagination);
     });
   });
 });
