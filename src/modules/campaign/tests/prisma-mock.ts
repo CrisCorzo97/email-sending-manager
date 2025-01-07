@@ -1,1 +1,1 @@
-export const prismaMock = { campaign: { create: jest.fn() } };
+export const prismaCampaignMock = { create: jest.fn(), list: jest.fn() };

@@ -29,7 +29,11 @@ export class CampaignController {
       await this.campaignService.create(createCampaignDto);
 
     response.data = data;
-    response.error = error;
+
+    if (error) {
+      response.error = error;
+      response.success = false;
+    }
 
     return response;
   }
@@ -53,7 +57,11 @@ export class CampaignController {
 
     response.data = data;
     response.pagination = pagination;
-    response.error = error;
+
+    if (error) {
+      response.error = error;
+      response.success = false;
+    }
 
     return response;
   }
@@ -70,7 +78,11 @@ export class CampaignController {
     const { data, error } = await this.campaignService.findOne(campaign_id);
 
     response.data = data;
-    response.error = error;
+
+    if (error) {
+      response.error = error;
+      response.success = false;
+    }
 
     return response;
   }
@@ -93,7 +105,11 @@ export class CampaignController {
     });
 
     response.data = data;
-    response.error = error;
+
+    if (error) {
+      response.error = error;
+      response.success = false;
+    }
 
     return response;
   }
@@ -110,7 +126,11 @@ export class CampaignController {
     const { data, error } = await this.campaignService.remove(campaign_id);
 
     response.data = data;
-    response.error = error;
+
+    if (error) {
+      response.error = error;
+      response.success = false;
+    }
 
     return response;
   }
