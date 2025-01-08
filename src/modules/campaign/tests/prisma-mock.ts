@@ -53,13 +53,16 @@ export const prismaCampaignMock = {
       query.skip = (page - 1) * query.take;
     }
 
-    const campaigns = mockDatabase.slice(query.skip, query.take);
+    const campaigns = mockDatabase.slice(
+      query.skip,
+      query.take + (query.skip ?? 0),
+    );
 
     return {
       data: campaigns,
       pagination: {
         total_items: mockDatabase.length,
-        page: 1,
+        page: page ?? 1,
         items_per_page: query.take,
         total_pages: Math.ceil(mockDatabase.length / query.take),
       },

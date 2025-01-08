@@ -112,7 +112,7 @@ describe('CampaignController', () => {
       });
     });
 
-    it('should call the service to list campaigns paginated and return the result', async () => {
+    it('should list campaigns and paginate by queries', async () => {
       const dataToInject = [];
 
       for (let i = 2; i < 10; i++) {
@@ -129,10 +129,10 @@ describe('CampaignController', () => {
         prismaCampaignMock.create(data);
       }
 
-      prismaCampaignMock.list({ page: 1, items_per_page: 3 });
+      prismaCampaignMock.list({ page: 2, items_per_page: 3 });
 
       // Act
-      const result = await controller.list(1, 3);
+      const result = await controller.list(2, 3);
 
       // Assert
       expect(result.data).toHaveLength(3);
@@ -140,10 +140,22 @@ describe('CampaignController', () => {
       expect(result.error).toBe(null);
       expect(result.pagination).toEqual({
         total_items: 9,
-        page: 1,
+        page: 2,
         items_per_page: 3,
         total_pages: 3,
       });
+    });
+
+    it('should throw an error if the service fails', async () => {
+      // Act
+      const result = await controller.list(404);
+
+      // Assert
+      expect(prismaCampaignMock.list).toHaveBeenCalledWith({ page: 404 });
+      expect(result.data).toBe(null);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Service Error');
+      expect(result.pagination).toBe(null);
     });
   });
 });
