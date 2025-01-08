@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { campaign } from '@prisma/client';
 import { Envelope } from 'src/types/envelope';
 import { PrismaService } from '../../../database/prisma.service';
 import { CampaignController } from '../campaign.controller';
@@ -68,6 +67,7 @@ describe('CampaignController', () => {
 
     it('should return a validation error if input is invalid', async () => {
       const invalidData = {
+        name: '',
         description: 'Description of Campaign 1',
         template_id: 'template1',
         send_at: new Date(),
@@ -80,8 +80,6 @@ describe('CampaignController', () => {
         error: 'Field name is required',
         pagination: null,
       };
-
-      prismaCampaignMock.create(mockResult);
 
       // Act
       const result = await controller.create(invalidData as CreateCampaignDto);
@@ -97,41 +95,55 @@ describe('CampaignController', () => {
 
   describe('GET / (list)', () => {
     it('should call the service to list campaigns and return the result', async () => {
-      const mockResult: Envelope<campaign[]> = {
-        success: true,
-        data: [
-          {
-            id: 'ajsdnafalmd',
-            name: 'Campaign 1',
-            description: 'Description of Campaign 1',
-            template_id: 'template1',
-            send_at: new Date(),
-            status: 'DRAFT',
-            created_at: new Date(),
-            updated_at: new Date(),
-          },
-        ],
-        error: null,
-        pagination: {
-          total_items: 1,
-          page: 1,
-          items_per_page: 5,
-          total_pages: 1,
-        },
-      };
-
-      prismaCampaignMock.list.mockResolvedValue(mockResult);
+      prismaCampaignMock.list({});
 
       // Act
       const result = await controller.list();
 
       // Assert
-      expect(result).toEqual(mockResult);
-      expect(prismaCampaignMock.list).toHaveBeenCalledTimes(1);
-      expect(prismaCampaignMock.list).toHaveBeenCalledWith({});
+      expect(result.data).toHaveLength(1);
       expect(result.success).toBe(true);
       expect(result.error).toBe(null);
-      expect(result.pagination).toBe(mockResult.pagination);
+      expect(result.pagination).toEqual({
+        total_items: 1,
+        page: 1,
+        items_per_page: 5,
+        total_pages: 1,
+      });
+    });
+
+    it('should call the service to list campaigns paginated and return the result', async () => {
+      const dataToInject = [];
+
+      for (let i = 2; i < 10; i++) {
+        dataToInject.push({
+          name: `Campaign ${i}`,
+          description: `Description of Campaign ${i}`,
+          template_id: `template${i}`,
+          send_at: new Date(),
+          status: 'DRAFT',
+        });
+      }
+
+      for (const data of dataToInject) {
+        prismaCampaignMock.create(data);
+      }
+
+      prismaCampaignMock.list({ page: 1, items_per_page: 3 });
+
+      // Act
+      const result = await controller.list(1, 3);
+
+      // Assert
+      expect(result.data).toHaveLength(3);
+      expect(result.success).toBe(true);
+      expect(result.error).toBe(null);
+      expect(result.pagination).toEqual({
+        total_items: 9,
+        page: 1,
+        items_per_page: 3,
+        total_pages: 3,
+      });
     });
   });
 });
